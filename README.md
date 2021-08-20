@@ -1,4 +1,4 @@
-Aplicacaiones multiples
+Aplicaciones multiples
 ================
 
 ``` r

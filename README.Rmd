@@ -1,5 +1,5 @@
 ---
-title: "Aplicacaiones multiples"
+title: "Aplicaciones multiples"
 output: github_document
 ---
 
