@@ -1,0 +1,184 @@
+---
+title: "Aplicacaiones multiples"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+ind <- c(183,186,185,199,205,194,210,288,
+         176,187,195,209,222,216,212,223,
+         183,196,195,199,208,216,229,226,
+         184,205,211,219,213,205,218,224,
+         191,203,206,225,215,207,226,230,
+         197,202,203,201,204,209,227,243,
+         193,202,209,203,202,201,223,229,
+         182,187,197,226,203,224,221,222)
+# dependent variable
+dep <- c(169,165,167,188,189,181,212,208,
+         165,172,178,199,210,202,199,222,
+         175,186,179,182,194,205,219,209,
+         174,191,196,205,192,192,206,215,
+         177,191,191,218,195,196,213,221,
+         180,187,189,186,188,195,218,236,
+         177,189,198,187,188,197,210,215,
+         181,179,192,212,201,200,205,203)
+
+# mostramos la grafica de dispersion de velores.
+plot(ind, dep)
+
+#intentamos generar el modelo de regresión 
+m <- glm(dep ~ ind)
+summary(m)
+
+# agregamos el modelo de regresion en la que incluye la linea 
+plot(ind, dep)
+abline(m)
+#######
+# Agregrando más recursos para la grafica. 
+plot(ind, dep, pch=18, xlim=c(160,300), ylim=c(160,250),
+    axes=FALSE, xlab='', ylab='', yaxs="i", xaxs="i")
+axis(1, at=(3:6)*50)
+axis(2, at=(3:5)*50, las=1)
+# Creando la formula de la regresion 
+f <- paste0('y = ', round(m$coefficients[2], 4), 'x + ', round(m$coefficients[1], 4))
+# Adicionando el texto de la ecuación 
+text(170, 240, f, pos=4)
+# indicando el valor de R^2
+R2 <- cor(dep, predict(m))^2
+
+r2 <- bquote(italic(R)^2 == .(round(R2, 4)))
+# adicionando el texto indicando su posición 
+text(170, 235, r2, pos=4)
+# Caluclamos la linea de la regresión 
+px <- data.frame(ind = range(ind))
+# presentando el model de regresión 
+py <- predict(m, px)
+# Combinando los valores para la predición 
+ln <- cbind(px, py)
+# aAdicionamos la linea en la grafica 
+lines(ln, lwd=2)
+
+#Conviertiendo los valores vectoriales en matriciales 
+mi <- matrix(ind, ncol=8, nrow=8, byrow=TRUE,)
+md <- matrix(dep, ncol=8, nrow=8, byrow=TRUE)
+
+# Cargamos la libreria
+library(raster)
+
+# convirtiendo los valores 
+ri <- raster(mi, xmn=16, xmx=32, ymn=32, ymx=48, crs="+proj=longlat +datum=WGS84 +no_defs")
+rd <- raster(md, xmn=16, xmx=32, ymn=32, ymx=48, crs="+proj=longlat +datum=WGS84 +no_defs")
+ri
+
+# postrando el dato 
+plot(ri, legend=TRUE)
+text(ri)
+# agregando otras funciones 
+
+ai1 <- aggregate(ri, c(2, 1), fun=mean)
+ad1 <- aggregate(rd, c(2, 1), fun=mean)
+ai1
+#Covirtiendo un raster en una matriz
+as.matrix(ai1)
+#mostrando en la imagen 
+plot(ai1)
+text(ai1, digits=1)
+#
+s1 <- stack(ai1, ad1)
+names(s1) <- c('ind', 'dep')
+s1
+
+plot(s1)
+
+
+d1 <- as.data.frame(s1)
+head(d1)
+
+ma1 <- glm(dep~ind, data=d1)
+summary(ma1)
+
+#  Aplicacaiones basicas de cálculo de distancia, adyacencia, interacción, vecindario
+# ingresado lavores de coordenadas 
+
+A <- c(379959.17,8775681.60)
+B <- c(384370.49,8779719.34)
+C <- c(381480.27,8779262.48)
+D <- c(383410.69,8783663.41)
+E <- c(375770.15,8779871.67)
+G <- c(380119.93,8781854.88)
+H <- c(380519.25,8786540.54)
+I <- c(375755.39,8783592.40)
+J <- c(372685.60,8786042.43)
+K <- c(372006.39,8782604.28)
+
+#integrando los valores de las coordenadas 
+pts <- rbind(A,B,C,D,E,G,H,I,J,K)
+head(pts)
+pts
+# intentando mostrar las los puntos en el espacio
+plot(pts, xlim=c(372825,389000), ylim=c(8771000,8788000), pch=20, cex=2, col='red', xlab='X', ylab='Y', las=1)
+text(pts+5, LETTERS[1:10])
+
+dis <- dist(pts)
+dis
+
+disma <- as.matrix(dis)
+round(disma)
+
+a <-  disma < 5000
+a
+
+b<-disma>5500
+b
+
+#Calculo de vecino más cercanos
+
+
+cols <- apply(disma, 1, order)
+# we need to transpose the result
+cols <- t(cols)
+
+cols <- cols[, 2:8]
+cols
+
+
+#Calculando la Matriz de pesos
+
+W <- 1 / disma
+round(W, 4)
+
+W[!is.finite(W)] <- NA
+
+
+rtot <- rowSums(W, na.rm=TRUE)
+# this is equivalent to
+# rtot <- apply(W, 1, sum, na.rm=TRUE)
+rtot
+
+
+W <- W / rtot
+rowSums(W, na.rm=TRUE)
+
+
+colSums(W, na.rm=TRUE)
+
+# Aplicacaiones de Polígonos de proximidad
+#cargamos la libreria
+library(dismo)
+library(deldir)
+#Algoritmo de boronoi
+v <- voronoi(pts)
+v
+plot(v)
+
+#Intentando mostrar a colores.
+par(mai=rep(0,4))
+plot(v, lwd=4, border='gray', col=rainbow(6))
+points(pts, pch=20, cex=2)
+text(pts+5, toupper(letters[1:10]), cex=1.5)
+
+```
+
